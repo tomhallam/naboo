@@ -23,7 +23,7 @@ const DEFAULT_EDGE_ATTRS = {
   fontcolor: '#2D3436',
   fontname: 'Sans-Serif',
   fontsize: '11',
-  color: '#666666',
+  color: '#666666'
 };
 
 const resources = {};
