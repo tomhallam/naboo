@@ -137,6 +137,13 @@ class Diagram {
       console.error('error', args);
     });
   }
+
+  toSVG() {
+    console.log('Writing graph...');
+    return this.graph.output('svg', 'output.svg', (...args) => {
+      console.error('error', args);
+    });
+  }
 }
 
 module.exports = Diagram;
