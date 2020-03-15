@@ -11,6 +11,14 @@ const DEFAULT_GRAPH_ATTRIBUTES = {
   rankdir: 'LR'
 };
 
+const DEFAULT_GROUP_ATTRS = {
+  style: 'rounded',
+  labeljust: 'l',
+  pencolor: '#AEB6BE',
+  fontname: 'Sans-Serif',
+  fontsize: '12'
+};
+
 const resources = {};
 
 class Diagram {
@@ -23,24 +31,18 @@ class Diagram {
   }
 
   group(wrapperNode, groupCallback) {
-    const cluster = this.graph.addCluster(wrapperNode.getLabel());
+    const cluster = this.graph.addCluster(`cluster${wrapperNode.getLabel()}`);
 
+    Object.entries({
+      ...DEFAULT_GROUP_ATTRS,
+      ...wrapperNode.getGroupAttrs()
+    }).forEach(([key, value]) => cluster.set(key, value));
 
-    Object.entries(wrapperNode.getGroupAttrs()).forEach(([key, value]) =>
-      cluster.set(key, value)
-    );
+    cluster.set('label', wrapperNode.getLabel());
 
     groupCallback({
       link: (source, dest, options) => {
-        const sourceNode = this.getNode(source);
-        const destNode = this.getNode(dest);
-
-        cluster.addEdge(sourceNode, destNode, {
-          ...source.getEdgeAttrs(options),
-          ...dest.getEdgeAttrs(options)
-        });
-        
-        cluster.set('label', wrapperNode.getLabel());
+        return this.link(source, dest, options, cluster);
       },
       add: instancesArray => {
         instancesArray.forEach(instance => {
@@ -68,27 +70,13 @@ class Diagram {
     return resources[instanceId];
   }
 
-  link(source, destination, options = {}) {
-    const sourceId = source.getId();
-    const destinationId = destination.getId();
+  link(source, dest, options = {}, parent) {
+    const sourceNode = this.getNode(source);
+    const destNode = this.getNode(dest);
 
-    if (!resources[sourceId]) {
-      resources[sourceId] = this.graph.addNode(sourceId, {
-        label: source.getLabel(),
-        ...source.getNodeAttrs()
-      });
-    }
-
-    if (!resources[destinationId]) {
-      resources[destinationId] = this.graph.addNode(destinationId, {
-        label: destination.getLabel(),
-        ...destination.getNodeAttrs()
-      });
-    }
-
-    this.graph.addEdge(resources[sourceId], resources[destinationId], {
+    (parent || this.graph).addEdge(sourceNode, destNode, {
       ...source.getEdgeAttrs(options),
-      ...destination.getEdgeAttrs(options)
+      ...dest.getEdgeAttrs(options)
     });
   }
 

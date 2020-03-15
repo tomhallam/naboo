@@ -9,9 +9,9 @@ class VPC extends Resource {
 
   getGroupAttrs() {
     return {
-      style: 'filled',
-      color: 'lightgrey'
-    }
+      style: 'dotted',
+      color: 'red'
+    };
   }
 
   getNodeAttrs() {

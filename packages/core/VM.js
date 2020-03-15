@@ -5,7 +5,7 @@ function run(fn) {
   const result = fn({ diagram: rootDiagram });
 
   console.log(result.graph.to_dot());
-  result.graph.output('png', 'output.png');
+  result.toPNG();
 }
 
 module.exports = {

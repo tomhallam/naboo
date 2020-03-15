@@ -35,8 +35,8 @@ class Resource {
     };
   }
 
-  getEdgeAttrs() {
-    return {};
+  getEdgeAttrs(options) {
+    return { ...options };
   }
 }
 

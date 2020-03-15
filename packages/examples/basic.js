@@ -2,17 +2,23 @@ const { run } = require('@naboo/core/VM');
 const { EC2, Lambda } = require('@naboo/resources/aws/compute');
 const SQS = require('@naboo/resources/aws/integration/sqs');
 const VPC = require('@naboo/resources/aws/networking/vpc');
+const ELB = require('@naboo/resources/aws/networking/elb');
 
 run(({ diagram }) => {
-  diagram.group(new VPC(), group => {
+  const elb = new ELB('api.mycompany.com');
+  const processingLambda = new Lambda('Batch Processing Lambda');
+  const messageQueue = new SQS('Messages Queue');
+
+  diagram.group(new VPC('VPC1'), vpc => {
     const webServer = new EC2('Web Server');
-    const messageQueue = new SQS('Messages Queue');
-    const processingLambda = new Lambda('Batch Processing Lambda');
 
-    group.link(webServer, messageQueue);
-    group.link(messageQueue, processingLambda);
+    vpc.link(webServer, messageQueue, {
+      label: 'Each request turned to message'
+    });
 
-    group.add([webServer, messageQueue, processingLambda]);
+    vpc.link(messageQueue, processingLambda);
+
+    diagram.link(elb, webServer);
   });
 
   return diagram;
