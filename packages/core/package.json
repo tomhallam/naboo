@@ -1,0 +1,24 @@
+{
+  "name": "@naboo/core",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "Tom Hallam <tom@freshnode.co.uk>",
+  "homepage": "",
+  "license": "ISC",
+  "main": "lib/core.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "@types/graphviz": "0.0.30",
+    "graphviz": "0.0.9",
+    "uuid": "^7.0.2"
+  }
+}
