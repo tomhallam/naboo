@@ -19,19 +19,63 @@ const DEFAULT_GROUP_ATTRS = {
   fontsize: '12'
 };
 
+const DEFAULT_EDGE_ATTRS = {
+  fontcolor: '#2D3436',
+  fontname: 'Sans-Serif',
+  fontsize: '11',
+  color: '#666666',
+};
+
 const resources = {};
+
+const httpLinkFn = (instance, source, dest, options) => {
+  instance.addEdge(source, dest, {
+    ...DEFAULT_EDGE_ATTRS,
+    label: '',
+    ...options
+  });
+};
+
+const tcpLinkFn = (instance, source, dest, options) => {
+  instance.addEdge(source, dest, {
+    ...DEFAULT_EDGE_ATTRS,
+    label: 'tcp',
+    ...options
+  });
+};
+
+const wsLinkFn = (instance, source, dest, options) => {
+  instance.addEdge(source, dest, {
+    ...DEFAULT_EDGE_ATTRS,
+    label: 'websocket',
+    ...options
+  });
+};
 
 class Diagram {
   constructor(name) {
     this.graph = digraph(name);
+    this.linkTypes = {};
 
     Object.entries(DEFAULT_GRAPH_ATTRIBUTES).forEach(([key, value]) =>
       this.graph.set(key, value)
     );
+
+    this.registerLinkType('http', httpLinkFn);
+    this.registerLinkType('tcp', tcpLinkFn);
+    this.registerLinkType('websocket', wsLinkFn);
   }
 
-  group(wrapperNode, groupCallback) {
-    const cluster = this.graph.addCluster(`cluster${wrapperNode.getLabel()}`);
+  registerLinkType(type, fn) {
+    if (!this.linkTypes[type]) {
+      this.linkTypes[type] = fn;
+    }
+  }
+
+  group(wrapperNode, groupCallback, parent) {
+    const cluster = (parent || this.graph).addCluster(
+      `cluster${wrapperNode.getLabel()}`
+    );
 
     Object.entries({
       ...DEFAULT_GROUP_ATTRS,
@@ -41,10 +85,13 @@ class Diagram {
     cluster.set('label', wrapperNode.getLabel());
 
     groupCallback({
-      link: (source, dest, options) => {
-        return this.link(source, dest, options, cluster);
+      group: (groupWrapperNode, groupGroupCallback) => {
+        return this.group(groupWrapperNode, groupGroupCallback, cluster);
       },
-      add: instancesArray => {
+      link: (type, source, dest, options) => {
+        return this.link(type, source, dest, options, cluster);
+      },
+      add: (...instancesArray) => {
         instancesArray.forEach(instance => {
           if (!resources[instance.getId()]) {
             resources[instance.getId()] = cluster.addNode(instance.getId(), {
@@ -70,14 +117,14 @@ class Diagram {
     return resources[instanceId];
   }
 
-  link(source, dest, options = {}, parent) {
+  link(type, source, dest, options = {}, parent) {
     const sourceNode = this.getNode(source);
     const destNode = this.getNode(dest);
+    const linkFn = this.linkTypes[type];
 
-    (parent || this.graph).addEdge(sourceNode, destNode, {
-      ...source.getEdgeAttrs(options),
-      ...dest.getEdgeAttrs(options)
-    });
+    const instance = parent || this.graph;
+
+    return linkFn(instance, sourceNode, destNode, options);
   }
 
   toDot() {
